@@ -1,0 +1,158 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String             @id @default(uuid())
+  email         String             @unique
+  name          String?
+  passwordHash  String             @map("password_hash")
+  createdAt     DateTime           @default(now()) @map("created_at")
+
+  periods       FinancialPeriod[]
+  transactions  Transaction[]
+  categories    Category[]
+  budgets       BudgetAllocation[]
+  shoppingLists ShoppingList[]
+  reconciliations Reconciliation[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model FinancialPeriod {
+  id             String             @id @default(uuid())
+  userId         String             @map("user_id")
+  year           Int
+  month          Int
+  openingBalance Decimal            @default(0) @db.Decimal(14, 2) @map("opening_balance")
+  status         String             @default("OPEN") // OPEN, CLOSED
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  budgets        BudgetAllocation[]
+  reconciliations Reconciliation[]
+
+  @@unique([userId, year, month])
+  @@map("financial_periods")
+}
+
+model Category {
+  id        String             @id @default(uuid())
+  userId    String?            @map("user_id") // Null si es del catálogo global predefinido
+  name      String
+  emoji     String
+  isActive  Boolean            @default(true) @map("is_active")
+
+  user      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  budgets   BudgetAllocation[]
+
+  @@map("categories")
+}
+
+model Transaction {
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  periodId    String           @map("period_id")
+  type        String           // INCOME, EXPENSE
+  date        DateTime
+  concept     String
+  amount      Decimal          @db.Decimal(14, 2)
+  categoryId  String?          @map("category_id")
+  description String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period      FinancialPeriod  @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@map("transactions")
+}
+
+model BudgetAllocation {
+  id              String          @id @default(uuid())
+  userId          String          @map("user_id")
+  periodId        String          @map("period_id")
+  categoryId      String          @map("category_id")
+  allocatedAmount Decimal         @db.Decimal(14, 2) @map("allocated_amount")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period          FinancialPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  category        Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, periodId, categoryId])
+  @@map("budget_allocations")
+}
+
+model ShoppingList {
+  id              String         @id @default(uuid())
+  userId          String         @map("user_id")
+  name            String
+  referencePeriod String?        @map("reference_period") // Ej: "2026-11"
+  status          String         @default("ACTIVE") // ACTIVE, ARCHIVED
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           ShoppingItem[]
+
+  @@map("shopping_lists")
+}
+
+model ShoppingItem {
+  id             String        @id @default(uuid())
+  listId         String        @map("list_id")
+  name           String
+  quantity       Int           @default(1)
+  estimatedPrice Decimal?      @db.Decimal(14, 2) @map("estimated_price")
+  notes          String?
+  isPurchased    Boolean       @default(false) @map("is_purchased")
+  purchasedAt    DateTime?     @map("purchased_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  list           ShoppingList  @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@map("shopping_items")
+}
+
+model Reconciliation {
+  id                 String          @id @default(uuid())
+  userId             String          @map("user_id")
+  periodId           String          @map("period_id")
+  reportedOutflow    Decimal         @db.Decimal(14, 2) @map("reported_outflow")
+  registeredExpenses Decimal         @db.Decimal(14, 2) @map("registered_expenses")
+  difference         Decimal         @db.Decimal(14, 2)
+  status             String          // CONCILIADO, CON_DIFERENCIAS_NO_IDENTIFICADAS, INCONSISTENCIA_SOBRE_REGISTRO
+  createdAt          DateTime        @default(now()) @map("created_at")
+
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period             FinancialPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@map("reconciliations")
+}
+
+model AuditLog {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  entity         String
+  entityId       String    @map("entity_id")
+  action         String    // CREATE, UPDATE, DELETE
+  previousValues String?   @db.Text @map("previous_values")
+  newValues      String?   @db.Text @map("new_values")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}

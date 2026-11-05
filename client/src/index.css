@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --color-violet-deep: #2E1065;
+  --color-violet-main: #5B21B6;
+  --color-lavender: #C084FC;
+  --color-lavender-soft: #E9D5FF;
+  --color-lavender-surface: #F5EEFF;
+  --color-forest-green: #064E3B;
+  --color-emerald-green: #065F46;
+  --color-gold: #D97706;
+  --color-gold-warm: #EAB308;
+  --color-amber-alert: #F59E0B;
+  --color-bg-base: #FAF8FC;
+  --color-bg-card: #FFFFFF;
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--color-bg-base);
+  color: #1F2937;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Clases de utilidad con los colores exactos */
+.bg-violet-deep { background-color: #2E1065; }
+.text-violet-deep { color: #2E1065; }
+.border-violet-deep { border-color: #2E1065; }
+
+.bg-lavender-main { background-color: #C084FC; }
+.text-lavender-main { color: #C084FC; }
+
+.bg-lavender-soft { background-color: #E9D5FF; }
+.text-lavender-soft { color: #7E22CE; }
+.border-lavender-soft { border-color: #E9D5FF; }
+
+.bg-forest-green { background-color: #064E3B; }
+.text-forest-green { color: #064E3B; }
+
+.bg-emerald-green { background-color: #065F46; }
+.text-emerald-green { color: #065F46; }
+
+.bg-gold-main { background-color: #D97706; }
+.text-gold-main { color: #D97706; }
+.border-gold-main { border-color: #D97706; }
+
+.bg-gold-warm { background-color: #EAB308; }
+.text-gold-warm { color: #EAB308; }
+
+.bg-amber-alert { background-color: #F59E0B; }
+.text-amber-alert { color: #F59E0B; }

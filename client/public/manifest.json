@@ -1,0 +1,21 @@
+{
+  "short_name": "Victoria",
+  "name": "Victoria Balance - Gestión Financiera",
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/pwa-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#FAF8FC",
+  "theme_color": "#5B21B6",
+  "display": "standalone",
+  "orientation": "portrait"
+}
