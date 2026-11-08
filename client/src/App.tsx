@@ -9,7 +9,9 @@ import {
   Calendar as CalendarIcon,
   Plus,
   Moon,
-  Sun
+  Sun,
+  ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 import api from './services/api';
 import { Category, DashboardData } from './types';
@@ -20,6 +22,8 @@ import { TransactionsView } from './components/TransactionsView';
 import { BudgetView } from './components/BudgetView';
 import { ShoppingListsView } from './components/ShoppingListsView';
 import { ReconciliationView } from './components/ReconciliationView';
+import { AdminView } from './components/AdminView';
+import { PaywallModal } from './components/PaywallModal';
 
 export function App() {
   const [user, setUser] = useState<any>(() => {
@@ -27,7 +31,6 @@ export function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Tema Claro / Oscuro con persistencia en localStorage
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const savedTheme = localStorage.getItem('vb_theme');
     if (savedTheme) return savedTheme === 'dark';
@@ -44,7 +47,7 @@ export function App() {
     }
   }, [darkMode]);
 
-  const [activeTab, setActiveTab] = useState<'inicio' | 'movimientos' | 'presupuesto' | 'listas' | 'conciliacion'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'movimientos' | 'presupuesto' | 'listas' | 'conciliacion' | 'admin'>('inicio');
   
   const now = new Date();
   const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -56,19 +59,37 @@ export function App() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+
+  // Calcular días restantes de prueba
+  const getDaysRemaining = () => {
+    if (!user || !user.trialEndsAt || user.role === 'ADMIN' || user.subscriptionStatus === 'LIFETIME' || user.subscriptionStatus === 'ACTIVE') {
+      return null;
+    }
+    const diffTime = new Date(user.trialEndsAt).getTime() - new Date().getTime();
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  };
+
+  const daysRemaining = getDaysRemaining();
+  const isTrialExpired = user?.subscriptionStatus === 'EXPIRED' || (daysRemaining !== null && daysRemaining <= 0);
 
   const loadMainData = async () => {
     if (!user) return;
     setLoading(true);
     try {
       const [yearStr, monthStr] = selectedPeriod.split('-');
-      const [dashRes, catRes] = await Promise.all([
+      const [dashRes, catRes, meRes] = await Promise.all([
         api.get('/dashboard', { params: { year: parseInt(yearStr, 10), month: parseInt(monthStr, 10) } }),
         api.get('/categories'),
+        api.get('/auth/me').catch(() => null),
       ]);
 
       setDashboardData(dashRes.data);
       setCategories(catRes.data.categories);
+      if (meRes?.data?.user) {
+        setUser(meRes.data.user);
+        localStorage.setItem('vb_user', JSON.stringify(meRes.data.user));
+      }
     } catch (err: any) {
       console.error('Error al cargar datos:', err);
     } finally {
@@ -80,7 +101,7 @@ export function App() {
     if (user) {
       loadMainData();
     }
-  }, [user, selectedPeriod]);
+  }, [user?.id, selectedPeriod]);
 
   const handleLogout = () => {
     localStorage.removeItem('vb_token');
@@ -89,6 +110,10 @@ export function App() {
   };
 
   const handleOpenTransaction = (type: 'INCOME' | 'EXPENSE') => {
+    if (isTrialExpired && user?.role !== 'ADMIN') {
+      setIsPaywallOpen(true);
+      return;
+    }
     setModalType(type);
     setIsModalOpen(true);
   };
@@ -110,6 +135,31 @@ export function App() {
 
   return (
     <div className="min-h-screen pb-24 md:pb-12 flex flex-col font-sans transition-colors duration-200">
+      {/* Banner de Trial / Monetización (solo usuarios en Trial) */}
+      {daysRemaining !== null && !isTrialExpired && (
+        <div className="bg-gradient-to-r from-[#2E1065] via-[#5B21B6] to-[#065F46] text-white px-4 py-2 text-center text-xs font-semibold flex items-center justify-center gap-3">
+          <span>🎁 Tienes <strong>{daysRemaining} días de prueba gratuita</strong> restantes.</span>
+          <button
+            onClick={() => setIsPaywallOpen(true)}
+            className="px-2.5 py-0.5 rounded-full bg-white text-[#2E1065] text-[10px] font-black uppercase hover:bg-purple-100 transition"
+          >
+            Activar Premium (WhatsApp)
+          </button>
+        </div>
+      )}
+
+      {isTrialExpired && user?.role !== 'ADMIN' && (
+        <div className="bg-rose-700 text-white px-4 py-2.5 text-center text-xs font-bold flex items-center justify-center gap-3">
+          <span>⚠️ Tu período de prueba de 7 días ha finalizado.</span>
+          <button
+            onClick={() => setIsPaywallOpen(true)}
+            className="px-3 py-1 rounded-full bg-white text-rose-800 text-[11px] font-black uppercase hover:bg-rose-100 transition shadow"
+          >
+            Activar Membresía Ahora
+          </button>
+        </div>
+      )}
+
       {/* Barra Superior */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#181126]/90 backdrop-blur-md border-b border-[#E9D5FF]/60 dark:border-[#2D1F47] px-4 sm:px-8 py-3.5 transition">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
@@ -128,12 +178,17 @@ export function App() {
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E9D5FF]/60 dark:bg-[#2D1F47] text-[#2E1065] dark:text-[#E9D5FF] border border-[#C084FC]/30">
                   v2.0
                 </span>
+                {user.role === 'ADMIN' && (
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-900 text-white border border-purple-400">
+                    ADMIN
+                  </span>
+                )}
               </h1>
               <p className="text-[11px] text-slate-400 font-medium hidden sm:block">Gestión Financiera Diaria & Personal</p>
             </div>
           </div>
 
-          {/* Selector de Período, Tema y Usuario */}
+          {/* Selector de Período, Admin, Tema y Usuario */}
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-2 bg-[#FAF8FC] dark:bg-[#1E1530] border border-[#E9D5FF] dark:border-[#382658] px-3 py-1.5 rounded-xl">
               <CalendarIcon className="w-4 h-4 text-[#2E1065] dark:text-[#C084FC]" />
@@ -144,6 +199,22 @@ export function App() {
                 className="bg-transparent text-xs font-bold text-[#2E1065] dark:text-white focus:outline-none cursor-pointer"
               />
             </div>
+
+            {/* Botón Acceso Panel Admin */}
+            {user.role === 'ADMIN' && (
+              <button
+                onClick={() => setActiveTab(activeTab === 'admin' ? 'inicio' : 'admin')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'admin'
+                    ? 'bg-[#2E1065] text-white'
+                    : 'bg-purple-100 text-[#2E1065] dark:bg-purple-950/60 dark:text-[#E9D5FF] hover:bg-purple-200'
+                }`}
+                title="Administrar Usuarios y Pagos"
+              >
+                <ShieldAlert className="w-4 h-4 text-[#D97706]" />
+                <span className="hidden sm:inline">Admin</span>
+              </button>
+            )}
 
             {/* Toggle Modo Claro / Oscuro */}
             <button
@@ -182,6 +253,10 @@ export function App() {
           </div>
         ) : (
           <>
+            {activeTab === 'admin' && user.role === 'ADMIN' && (
+              <AdminView onBack={() => setActiveTab('inicio')} />
+            )}
+
             {activeTab === 'inicio' && dashboardData && (
               <DashboardView
                 data={dashboardData}
@@ -289,6 +364,15 @@ export function App() {
         categories={categories}
         onSuccess={loadMainData}
         initialType={modalType}
+      />
+
+      {/* Modal de Monetización / WhatsApp */}
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        userEmail={user.email}
+        userName={user.name}
+        daysRemaining={daysRemaining ?? 0}
       />
     </div>
   );

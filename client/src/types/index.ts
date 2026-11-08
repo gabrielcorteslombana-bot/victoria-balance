@@ -2,6 +2,10 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  role?: 'USER' | 'ADMIN';
+  subscriptionStatus?: 'TRIAL' | 'ACTIVE' | 'EXPIRED' | 'LIFETIME';
+  trialEndsAt?: string | null;
+  phone?: string | null;
 }
 
 export interface Category {

@@ -9,19 +9,23 @@ generator client {
 }
 
 model User {
-  id            String             @id @default(uuid())
-  email         String             @unique
-  name          String?
-  passwordHash  String             @map("password_hash")
-  createdAt     DateTime           @default(now()) @map("created_at")
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  name               String?
+  passwordHash       String             @map("password_hash")
+  role               String             @default("USER") // USER, ADMIN
+  subscriptionStatus String             @default("TRIAL") @map("subscription_status") // TRIAL, ACTIVE, EXPIRED, LIFETIME
+  trialEndsAt        DateTime?          @map("trial_ends_at")
+  phone              String?
+  createdAt          DateTime           @default(now()) @map("created_at")
 
-  periods       FinancialPeriod[]
-  transactions  Transaction[]
-  categories    Category[]
-  budgets       BudgetAllocation[]
-  shoppingLists ShoppingList[]
-  reconciliations Reconciliation[]
-  auditLogs     AuditLog[]
+  periods            FinancialPeriod[]
+  transactions       Transaction[]
+  categories         Category[]
+  budgets            BudgetAllocation[]
+  shoppingLists      ShoppingList[]
+  reconciliations    Reconciliation[]
+  auditLogs          AuditLog[]
 
   @@map("users")
 }

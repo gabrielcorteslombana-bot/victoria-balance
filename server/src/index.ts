@@ -8,6 +8,7 @@ import budgetsRouter from './routes/budgets.js';
 import shoppingRouter from './routes/shopping.js';
 import dashboardRouter from './routes/dashboard.js';
 import metaRouter from './routes/meta.js';
+import adminRouter from './routes/admin.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api/budgets', budgetsRouter);
 app.use('/api/lists', shoppingRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api', metaRouter);
 
 // Health check
