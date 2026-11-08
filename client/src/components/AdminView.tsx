@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, CheckCircle, Clock, XCircle, Search, RefreshCw, Plus, Shield } from 'lucide-react';
+import { Users, CheckCircle, Clock, XCircle, Search, RefreshCw, Plus, Shield, Calendar } from 'lucide-react';
 import api from '../services/api';
 
 interface AdminViewProps {
@@ -23,7 +23,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBack }) => {
       setStats(statsRes.data);
       setUsers(usersRes.data.users);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al cargar panel de administración.');
+      alert(err.response?.data?.error || 'Error al cargar panel de administracion.');
     } finally {
       setLoading(false);
     }
@@ -33,12 +33,13 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBack }) => {
     fetchAdminData();
   }, []);
 
-  const handleUpdateStatus = async (userId: string, newStatus: string, extendDays: number = 0) => {
+  const handleUpdateStatus = async (userId: string, newStatus: string, planType?: string, extendDays: number = 0) => {
     setUpdatingId(userId);
     try {
       await api.patch(`/admin/users/${userId}/status`, {
         subscriptionStatus: newStatus,
-        extendTrialDays: extendDays,
+        planType,
+        extendDays,
       });
       await fetchAdminData();
     } catch (err: any) {
@@ -62,8 +63,8 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBack }) => {
             <Shield className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-[#2E1065] dark:text-white">Panel de Administración</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Control global de usuarios, pruebas y membresías activas</p>
+            <h2 className="text-xl font-black text-[#2E1065] dark:text-white">Panel de Administracion</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Activacion de membresias Mensuales, Semestrales y Anuales</p>
           </div>
         </div>
 
@@ -76,7 +77,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBack }) => {
         </button>
       </div>
 
-      {/* Tarjetas de Métricas Globales */}
+      {/* Tarjetas de Metricas Globales */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white dark:bg-[#181126] p-4 rounded-2xl border border-slate-100 dark:border-[#2D1F47] shadow-sm">
@@ -103,14 +104,14 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBack }) => {
         <Search className="w-4 h-4 text-slate-400" />
         <input
           type="text"
-          placeholder="Buscar por correo o nombre..."
+          placeholder="Buscar usuario por correo o nombre..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full bg-transparent text-xs font-semibold focus:outline-none dark:text-white"
         />
       </div>
 
-      {/* Tabla de Usuarios */}
+      {/* Tabla de Usuarios y Activaciones */}
       <div className="bg-white dark:bg-[#181126] rounded-3xl border border-[#E9D5FF]/60 dark:border-[#2D1F47] shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-400">Cargando usuarios...</div>
@@ -122,11 +123,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBack }) => {
               <thead className="bg-[#FAF8FC] dark:bg-[#1E1530] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-100 dark:border-slate-800 font-bold">
                 <tr>
                   <th className="px-5 py-3.5">Usuario</th>
-                  <th className="px-5 py-3.5">Contacto</th>
-                  <th className="px-5 py-3.5">Estado Membresía</th>
-                  <th className="px-5 py-3.5">Fin de Prueba</th>
-                  <th className="px-5 py-3.5">Movimientos</th>
-                  <th className="px-5 py-3.5 text-right">Acciones Rápidas</th>
+                  <th className="px-5 py-3.5">Contacto WhatsApp</th>
+                  <th className="px-5 py-3.5">Estado</th>
+                  <th className="px-5 py-3.5">Vencimiento</th>
+                  <th className="px-5 py-3.5 text-right">Activar Plan (Mensual / Sem / Anual)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#2D1F47]">
@@ -154,12 +154,12 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBack }) => {
                             href={`https://wa.me/${u.phone.replace(/[^0-9]/g, '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-emerald-600 hover:underline font-semibold"
+                            className="text-emerald-600 font-bold hover:underline"
                           >
                             {u.phone}
                           </a>
                         ) : (
-                          '—'
+                          '--'
                         )}
                       </td>
 
@@ -176,40 +176,60 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBack }) => {
                       </td>
 
                       <td className="px-5 py-3.5 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                        {u.trialEndsAt ? new Date(u.trialEndsAt).toLocaleDateString() : 'Ilimitado'}
-                      </td>
-
-                      <td className="px-5 py-3.5 whitespace-nowrap font-bold text-slate-700 dark:text-slate-300">
-                        {u._count?.transactions || 0}
+                        {u.subscriptionStatus === 'LIFETIME' 
+                          ? 'Vitalicio (Sin límite)' 
+                          : u.trialEndsAt 
+                          ? new Date(u.trialEndsAt).toLocaleDateString() 
+                          : '--'}
                       </td>
 
                       <td className="px-5 py-3.5 text-right whitespace-nowrap space-x-1.5">
-                        {/* Activar Membresía tras pago */}
-                        <button
-                          disabled={updatingId === u.id || isActive}
-                          onClick={() => handleUpdateStatus(u.id, 'ACTIVE')}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 transition disabled:opacity-40"
-                          title="Activar cuenta permanente tras recibir pago"
-                        >
-                          ✓ Activar Pago
-                        </button>
-
-                        {/* Extender 7 días más */}
+                        {/* Boton Plan Mensual (30 dias) */}
                         <button
                           disabled={updatingId === u.id}
-                          onClick={() => handleUpdateStatus(u.id, 'TRIAL', 7)}
-                          className="px-2.5 py-1 rounded-lg border border-purple-200 dark:border-purple-800 text-[#2E1065] dark:text-[#E9D5FF] font-bold text-[10px] hover:bg-purple-50 dark:hover:bg-purple-950/40 transition disabled:opacity-40"
-                          title="Extender 7 días adicionales de prueba"
+                          onClick={() => handleUpdateStatus(u.id, 'ACTIVE', 'MONTHLY')}
+                          className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[10px] transition disabled:opacity-40"
+                          title="Activar 1 Mes ($14.900)"
                         >
-                          +7 Días Trial
+                          +1 Mes
                         </button>
 
-                        {/* Bloquear / Expirar */}
+                        {/* Boton Plan Semestral (180 dias) */}
+                        <button
+                          disabled={updatingId === u.id}
+                          onClick={() => handleUpdateStatus(u.id, 'ACTIVE', 'SEMESTER')}
+                          className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] transition disabled:opacity-40"
+                          title="Activar 6 Meses ($59.000)"
+                        >
+                          +6 Meses
+                        </button>
+
+                        {/* Boton Plan Anual (365 dias) */}
+                        <button
+                          disabled={updatingId === u.id}
+                          onClick={() => handleUpdateStatus(u.id, 'ACTIVE', 'ANNUAL')}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] transition disabled:opacity-40"
+                          title="Activar 1 Año ($99.000)"
+                        >
+                          +1 Año
+                        </button>
+
+                        {/* Extender +7 Dias Trial */}
+                        <button
+                          disabled={updatingId === u.id}
+                          onClick={() => handleUpdateStatus(u.id, 'TRIAL', undefined, 7)}
+                          className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[10px] hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40"
+                          title="Dar 7 días más de prueba"
+                        >
+                          +7d Trial
+                        </button>
+
+                        {/* Suspender / Expirar */}
                         {!isExpired && u.role !== 'ADMIN' && (
                           <button
                             disabled={updatingId === u.id}
                             onClick={() => handleUpdateStatus(u.id, 'EXPIRED')}
-                            className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300 font-bold text-[10px] hover:bg-rose-100 transition disabled:opacity-40"
+                            className="px-2 py-1 rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300 font-bold text-[10px] hover:bg-rose-100 transition disabled:opacity-40"
                             title="Suspender acceso"
                           >
                             Expirar

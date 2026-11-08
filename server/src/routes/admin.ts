@@ -24,7 +24,7 @@ router.get('/stats', async (req: AuthenticatedRequest, res) => {
       totalTransactions,
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Error al obtener estadísticas de administración.' });
+    return res.status(500).json({ error: 'Error al obtener estadisticas de administracion.' });
   }
 });
 
@@ -57,10 +57,11 @@ router.get('/users', async (req: AuthenticatedRequest, res) => {
   }
 });
 
-// PATCH /api/admin/users/:id/status - Cambiar estado de suscripción (ej: activar tras recibir pago por WhatsApp)
+// PATCH /api/admin/users/:id/status - Cambiar estado de suscripcion con planes mensuales, semestrales o anuales
 const updateStatusSchema = z.object({
   subscriptionStatus: z.enum(['TRIAL', 'ACTIVE', 'EXPIRED', 'LIFETIME']),
-  extendTrialDays: z.number().int().optional(),
+  extendDays: z.number().int().optional(),
+  planType: z.enum(['MONTHLY', 'SEMESTER', 'ANNUAL', 'CUSTOM', 'LIFETIME']).optional(),
 });
 
 router.patch('/users/:id/status', async (req: AuthenticatedRequest, res) => {
@@ -72,11 +73,19 @@ router.patch('/users/:id/status', async (req: AuthenticatedRequest, res) => {
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
     let newTrialEndsAt = user.trialEndsAt;
-    if (body.extendTrialDays && body.extendTrialDays > 0) {
+
+    // Calcular dias segun el plan
+    let daysToAdd = 0;
+    if (body.planType === 'MONTHLY') daysToAdd = 30;
+    else if (body.planType === 'SEMESTER') daysToAdd = 180;
+    else if (body.planType === 'ANNUAL') daysToAdd = 365;
+    else if (body.extendDays) daysToAdd = body.extendDays;
+
+    if (daysToAdd > 0) {
       const baseDate = user.trialEndsAt && new Date(user.trialEndsAt) > new Date()
         ? new Date(user.trialEndsAt)
         : new Date();
-      baseDate.setDate(baseDate.getDate() + body.extendTrialDays);
+      baseDate.setDate(baseDate.getDate() + daysToAdd);
       newTrialEndsAt = baseDate;
     }
 
@@ -84,12 +93,12 @@ router.patch('/users/:id/status', async (req: AuthenticatedRequest, res) => {
       where: { id },
       data: {
         subscriptionStatus: body.subscriptionStatus,
-        trialEndsAt: newTrialEndsAt,
+        trialEndsAt: body.subscriptionStatus === 'LIFETIME' ? null : newTrialEndsAt,
       },
     });
 
     return res.json({
-      message: `Estado actualizado a ${body.subscriptionStatus}`,
+      message: `Usuario actualizado con exito`,
       user: {
         id: updated.id,
         email: updated.email,

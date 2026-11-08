@@ -1,10 +1,15 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { generateToken, authMiddleware, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = Router();
+
+// Almacén seguro en memoria para códigos de recuperación (expiran en 15 minutos)
+// Estructura: email -> { code: string, expiresAt: number }
+const resetCodes = new Map<string, { code: string; expiresAt: number }>();
 
 const registerSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -112,6 +117,89 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// 1. Solicitar código de recuperación de contraseña (Gratis por WhatsApp oficial)
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Correo electrónico requerido.' });
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (!user) {
+      return res.status(404).json({ error: 'No existe una cuenta registrada con este correo.' });
+    }
+
+    // Generar código de seguridad de 6 dígitos
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutos
+
+    resetCodes.set(normalizedEmail, { code, expiresAt });
+
+    // Mensaje para enviar al WhatsApp del soporte/admin
+    const ADMIN_WHATSAPP = '573105780607';
+    const waText = encodeURIComponent(
+      `Hola Soporte Victoria Balance 🔐\n\n` +
+      `Solicito recuperar mi contraseña:\n` +
+      `• Correo: ${normalizedEmail}\n` +
+      `• Código de verificación: ${code}\n\n` +
+      `Por favor confirmar para reestablecer mi acceso.`
+    );
+    const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`;
+
+    return res.json({
+      message: 'Código de verificación generado con éxito.',
+      code, // Se entrega al frontend para que el usuario pueda enviarlo por WhatsApp
+      whatsappUrl,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Error al procesar la solicitud de recuperación.' });
+  }
+});
+
+// 2. Restablecer contraseña con el código
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const stored = resetCodes.get(normalizedEmail);
+
+    if (!stored) {
+      return res.status(400).json({ error: 'No hay ninguna solicitud de recuperación activa o el código ha expirado.' });
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      resetCodes.delete(normalizedEmail);
+      return res.status(400).json({ error: 'El código ha expirado. Solicita uno nuevo.' });
+    }
+
+    if (stored.code !== code.trim()) {
+      return res.status(400).json({ error: 'Código de verificación incorrecto.' });
+    }
+
+    // Código válido -> Actualizar contraseña
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { email: normalizedEmail },
+      data: { passwordHash },
+    });
+
+    // Eliminar código usado
+    resetCodes.delete(normalizedEmail);
+
+    return res.json({ message: 'Contraseña actualizada correctamente. Ya puedes iniciar sesión.' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Error al restablecer la contraseña.' });
+  }
+});
+
 // Perfil del usuario actual
 router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
@@ -130,7 +218,6 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res) => {
     });
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    // Chequeo dinámico de vencimiento
     let currentStatus = user.subscriptionStatus;
     if (user.role !== 'ADMIN' && currentStatus === 'TRIAL' && user.trialEndsAt) {
       if (new Date() > new Date(user.trialEndsAt)) {
