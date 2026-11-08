@@ -10,7 +10,7 @@ import {
   Plus,
   Moon,
   Sun,
-  ShieldAlert,
+  Shield,
   Sparkles
 } from 'lucide-react';
 import api from './services/api';
@@ -133,6 +133,9 @@ export function App() {
     );
   }
 
+  // Comprobar si el usuario actual es Administrador
+  const isAdmin = user.role === 'ADMIN' || user.email === 'victoria@balance.app';
+
   return (
     <div className="min-h-screen pb-24 md:pb-12 flex flex-col font-sans transition-colors duration-200">
       {/* Banner de Trial / Monetización (solo usuarios en Trial) */}
@@ -148,14 +151,14 @@ export function App() {
         </div>
       )}
 
-      {isTrialExpired && user?.role !== 'ADMIN' && (
+      {isTrialExpired && !isAdmin && (
         <div className="bg-rose-700 text-white px-4 py-2.5 text-center text-xs font-bold flex items-center justify-center gap-3">
           <span>⚠️ Tu período de prueba de 7 días ha finalizado.</span>
           <button
             onClick={() => setIsPaywallOpen(true)}
             className="px-3 py-1 rounded-full bg-white text-rose-800 text-[11px] font-black uppercase hover:bg-rose-100 transition shadow"
           >
-            Activar Membresía Ahora
+            Activar Membresía por WhatsApp
           </button>
         </div>
       )}
@@ -178,8 +181,8 @@ export function App() {
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E9D5FF]/60 dark:bg-[#2D1F47] text-[#2E1065] dark:text-[#E9D5FF] border border-[#C084FC]/30">
                   v2.0
                 </span>
-                {user.role === 'ADMIN' && (
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-900 text-white border border-purple-400">
+                {isAdmin && (
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#D97706] text-white border border-amber-300">
                     ADMIN
                   </span>
                 )}
@@ -200,19 +203,19 @@ export function App() {
               />
             </div>
 
-            {/* Botón Acceso Panel Admin */}
-            {user.role === 'ADMIN' && (
+            {/* Botón Destacado de Panel Admin */}
+            {isAdmin && (
               <button
                 onClick={() => setActiveTab(activeTab === 'admin' ? 'inicio' : 'admin')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 border ${
                   activeTab === 'admin'
-                    ? 'bg-[#2E1065] text-white'
-                    : 'bg-purple-100 text-[#2E1065] dark:bg-purple-950/60 dark:text-[#E9D5FF] hover:bg-purple-200'
+                    ? 'bg-[#2E1065] text-white border-[#C084FC]'
+                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
                 }`}
                 title="Administrar Usuarios y Pagos"
               >
-                <ShieldAlert className="w-4 h-4 text-[#D97706]" />
-                <span className="hidden sm:inline">Admin</span>
+                <Shield className="w-4 h-4 text-[#D97706]" />
+                <span>Panel Admin</span>
               </button>
             )}
 
@@ -253,7 +256,7 @@ export function App() {
           </div>
         ) : (
           <>
-            {activeTab === 'admin' && user.role === 'ADMIN' && (
+            {activeTab === 'admin' && isAdmin && (
               <AdminView onBack={() => setActiveTab('inicio')} />
             )}
 

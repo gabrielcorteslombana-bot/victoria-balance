@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, MessageCircle, ShieldCheck, CheckCircle2, Clock } from 'lucide-react';
 
 interface PaywallModalProps {
@@ -18,9 +18,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  // Teléfono del administrador para recibir pagos directamente
-  // Si deseas cambiarlo en el futuro, solo actualizamos este número
-  const ADMIN_WHATSAPP = '573000000000'; // Formato internacional sin símbolos
+  // Número oficial de WhatsApp para pagos directos
+  const ADMIN_WHATSAPP = '573105780607';
 
   const message = encodeURIComponent(
     `Hola! Deseo activar mi suscripción a Victoria Balance ✨\n\n` +
@@ -61,7 +60,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
         </div>
 
         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
-          Continúa disfrutando de control financiero diario, reportes en tiempo real, conciliaciones y listas de compras ilimitadas con acceso directo sin intermediarios.
+          Continúa disfrutando de control financiero diario, reportes en tiempo real, conciliaciones y listas de compras con acceso directo sin intermediarios.
         </p>
 
         {/* Planes */}
@@ -86,7 +85,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
         <div className="space-y-2 mb-6">
           <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span>Registro y consulta de movimientos ilimitados 24/7.</span>
+            <span>Tus finanzas son 100% privadas e individuales.</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -94,7 +93,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span>Activación directa por Nequi, Daviplata o PSE (0% comisiones).</span>
+            <span>Pago directo a Nequi/Daviplata (310 578 0607).</span>
           </div>
         </div>
 
@@ -106,11 +105,11 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
           className="w-full py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-[#065F46] hover:bg-[#044331] transition shadow-lg shadow-emerald-950/20 flex items-center justify-center gap-2"
         >
           <MessageCircle className="w-5 h-5" />
-          <span>Activar Membresía por WhatsApp</span>
+          <span>Contactar por WhatsApp (310 578 0607)</span>
         </a>
 
         <p className="text-[10px] text-slate-400 text-center mt-3">
-          Al hacer clic te comunicas directamente con soporte para recibir datos de pago y activar tu cuenta en minutos.
+          Envía tu comprobante para activar tu cuenta de inmediato.
         </p>
       </div>
     </div>

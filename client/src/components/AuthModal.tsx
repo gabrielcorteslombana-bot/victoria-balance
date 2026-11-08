@@ -34,12 +34,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
     }
   };
 
-  const handleUseDemo = () => {
-    setEmail('victoria@balance.app');
-    setPassword('Victoria2026*');
-    setIsLogin(true);
-  };
-
   return (
     <div className="min-h-screen w-full bg-[#FAF8FC] dark:bg-[#0F0A1A] flex items-center justify-center p-4 sm:p-6 font-sans">
       <div className="w-full max-w-[420px] bg-white dark:bg-[#181126] rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-[#2D1F47] p-8 sm:p-10">
@@ -92,7 +86,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+57 300 123 4567"
+                  placeholder="+57 310 123 4567"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#382658] bg-white dark:bg-[#1E1530] text-xs font-medium text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#2E1065] dark:focus:border-[#C084FC] transition"
                 />
               </div>
@@ -133,17 +127,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
             </button>
           </div>
         </form>
-
-        {/* Acceso Demo discreto */}
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={handleUseDemo}
-            className="text-[11px] text-slate-400 hover:text-[#2E1065] dark:hover:text-[#C084FC] transition underline"
-          >
-            Probar con cuenta de demostración
-          </button>
-        </div>
 
         <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#2D1F47] text-center">
           <button
