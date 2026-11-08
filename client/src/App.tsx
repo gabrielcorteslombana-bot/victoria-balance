@@ -13,6 +13,7 @@ import {
   Shield,
   Sparkles,
   AlertCircle,
+  Clock,
   X
 } from 'lucide-react';
 import api from './services/api';
@@ -64,34 +65,36 @@ export function App() {
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [showTrialToast, setShowTrialToast] = useState(false);
 
-  // Calcular dias restantes de prueba
+  // Calcular dias restantes de prueba de forma ultra robusta
   const getDaysRemaining = () => {
-    if (!user || !user.trialEndsAt || user.role === 'ADMIN' || user.subscriptionStatus === 'LIFETIME' || user.subscriptionStatus === 'ACTIVE') {
+    if (!user) return null;
+    if (user.role === 'ADMIN' || user.email === 'victoria@balance.app' || user.subscriptionStatus === 'LIFETIME' || user.subscriptionStatus === 'ACTIVE') {
       return null;
     }
-    const diffTime = new Date(user.trialEndsAt).getTime() - new Date().getTime();
-    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    if (user.trialEndsAt) {
+      const diffTime = new Date(user.trialEndsAt).getTime() - new Date().getTime();
+      return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    }
+    // Si es un usuario nuevo en TRIAL pero trialEndsAt aún no se sincronizó, por defecto 7 días
+    if (user.subscriptionStatus === 'TRIAL') {
+      return 7;
+    }
+    return null;
   };
 
   const daysRemaining = getDaysRemaining();
   const isTrialExpired = user?.subscriptionStatus === 'EXPIRED' || (daysRemaining !== null && daysRemaining <= 0);
   const isAdmin = user?.role === 'ADMIN' || user?.email === 'victoria@balance.app';
+  const isTrialUser = !isAdmin && (user?.subscriptionStatus === 'TRIAL' || daysRemaining !== null);
 
   // Mostrar Pop-up informativo de bienvenida / aviso de dias restantes
   useEffect(() => {
-    if (user && !isAdmin && daysRemaining !== null && !isTrialExpired) {
-      const dismissedKey = `vb_trial_dismissed_${user.id}_day_${daysRemaining}`;
-      const alreadyDismissed = sessionStorage.getItem(dismissedKey);
-      if (!alreadyDismissed) {
-        setShowTrialToast(true);
-      }
+    if (user && isTrialUser && !isTrialExpired) {
+      setShowTrialToast(true);
     }
-  }, [user?.id, daysRemaining, isAdmin, isTrialExpired]);
+  }, [user?.id, isTrialUser, isTrialExpired]);
 
   const dismissTrialToast = () => {
-    if (user && daysRemaining !== null) {
-      sessionStorage.setItem(`vb_trial_dismissed_${user.id}_day_${daysRemaining}`, 'true');
-    }
     setShowTrialToast(false);
   };
 
@@ -114,7 +117,6 @@ export function App() {
       }
     } catch (err: any) {
       console.error('Error al cargar datos:', err);
-      // Si el servidor responde que la suscripcion expiro
       if (err.response?.status === 403 && err.response?.data?.subscriptionExpired) {
         setUser((prev: any) => ({ ...prev, subscriptionStatus: 'EXPIRED' }));
       }
@@ -169,45 +171,50 @@ export function App() {
 
   return (
     <div className="min-h-screen pb-24 md:pb-12 flex flex-col font-sans transition-colors duration-200">
-      {/* Banner de Trial / Monetizacion */}
-      {daysRemaining !== null && !isTrialExpired && (
-        <div className="bg-gradient-to-r from-[#2E1065] via-[#5B21B6] to-[#065F46] text-white px-4 py-2 text-center text-xs font-semibold flex items-center justify-center gap-3">
-          <span>Tienes <strong>{daysRemaining} dia{daysRemaining === 1 ? '' : 's'} de prueba gratuita</strong> restantes.</span>
+      
+      {/* 1. BANNER VISIBLE SUPERIOR DE PRUEBA ACTIVA */}
+      {isTrialUser && !isTrialExpired && (
+        <div className="bg-gradient-to-r from-[#2E1065] via-[#5B21B6] to-[#065F46] text-white px-4 py-2.5 text-center text-xs font-semibold flex flex-wrap items-center justify-center gap-2 sm:gap-4 shadow-md">
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span>Tienes <strong>{daysRemaining ?? 7} días de prueba gratuita</strong> restantes</span>
+          </span>
           <button
             onClick={() => setIsPaywallOpen(true)}
-            className="px-2.5 py-0.5 rounded-full bg-white text-[#2E1065] text-[10px] font-black uppercase hover:bg-purple-100 transition shadow-sm"
+            className="px-3 py-1 rounded-full bg-white text-[#2E1065] text-[10px] font-black uppercase hover:bg-purple-100 transition shadow"
           >
             Activar Premium (WhatsApp)
           </button>
         </div>
       )}
 
+      {/* 2. BANNER DE PRUEBA FINALIZADA */}
       {isTrialExpired && !isAdmin && (
-        <div className="bg-rose-700 text-white px-4 py-2.5 text-center text-xs font-bold flex items-center justify-center gap-3">
-          <span>Tu periodo de prueba de 7 dias ha finalizado.</span>
+        <div className="bg-rose-700 text-white px-4 py-2.5 text-center text-xs font-bold flex flex-wrap items-center justify-center gap-3 shadow-md">
+          <span>⚠️ Tu período de prueba de 7 días ha finalizado.</span>
           <button
             onClick={() => setIsPaywallOpen(true)}
             className="px-3 py-1 rounded-full bg-white text-rose-800 text-[11px] font-black uppercase hover:bg-rose-100 transition shadow"
           >
-            Activar Membresia por WhatsApp
+            Activar Membresía por WhatsApp
           </button>
         </div>
       )}
 
-      {/* POP-UP TOAST FLOTANTE INFORMATIVO DE PRUEBA */}
-      {showTrialToast && daysRemaining !== null && !isTrialExpired && (
-        <div className="fixed top-16 right-4 z-50 max-w-sm bg-white dark:bg-[#1E1530] border-2 border-[#C084FC] rounded-2xl p-4 shadow-2xl animate-in slide-in-from-top-4 duration-300">
+      {/* 3. POP-UP FLOTANTE DE AVISO (MODAL / TOAST EN PANTALLA) */}
+      {showTrialToast && isTrialUser && !isTrialExpired && (
+        <div className="fixed top-16 right-4 z-50 max-w-sm w-[90%] sm:w-auto bg-white dark:bg-[#1E1530] border-2 border-[#C084FC] rounded-2xl p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-[#2E1065] dark:text-[#C084FC] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Sparkles className="w-5 h-5 text-amber-500" />
+              <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-[#2E1065] dark:text-[#C084FC] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Clock className="w-5 h-5 text-amber-500" />
               </div>
               <div>
                 <h4 className="text-xs font-black text-[#2E1065] dark:text-white uppercase tracking-wider">
                   Acceso de Prueba Activo
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-snug">
-                  Te quedan <strong className="text-purple-600 dark:text-purple-400">{daysRemaining} dia{daysRemaining === 1 ? '' : 's'}</strong> de uso completo sin costo.
+                  Te quedan <strong className="text-purple-600 dark:text-purple-400 font-bold">{daysRemaining ?? 7} días</strong> de uso completo sin costo.
                 </p>
                 <div className="mt-3 flex items-center gap-2">
                   <button
@@ -261,12 +268,17 @@ export function App() {
                     ADMIN
                   </span>
                 )}
+                {isTrialUser && !isAdmin && (
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+                    PRUEBA: {daysRemaining ?? 7}D
+                  </span>
+                )}
               </h1>
-              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">Gestion Financiera Diaria & Personal</p>
+              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">Gestión Financiera Diaria & Personal</p>
             </div>
           </div>
 
-          {/* Selector de Periodo, Admin, Tema y Usuario */}
+          {/* Selector de Período, Admin, Tema y Usuario */}
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-2 bg-[#FAF8FC] dark:bg-[#1E1530] border border-[#E9D5FF] dark:border-[#382658] px-3 py-1.5 rounded-xl">
               <CalendarIcon className="w-4 h-4 text-[#2E1065] dark:text-[#C084FC]" />
@@ -278,7 +290,7 @@ export function App() {
               />
             </div>
 
-            {/* Boton Destacado de Panel Admin */}
+            {/* Botón Destacado de Panel Admin */}
             {isAdmin && (
               <button
                 onClick={() => setActiveTab(activeTab === 'admin' ? 'inicio' : 'admin')}
@@ -313,7 +325,7 @@ export function App() {
 
             <button
               onClick={handleLogout}
-              title="Cerrar sesion"
+              title="Cerrar sesión"
               className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
             >
               <LogOut className="w-4 h-4" />
@@ -373,7 +385,7 @@ export function App() {
         )}
       </main>
 
-      {/* Navegacion Inferior */}
+      {/* Navegación Inferior */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-[#181126]/95 backdrop-blur-md border-t border-[#E9D5FF]/60 dark:border-[#2D1F47] py-2.5 px-3 z-40 shadow-xl">
         <div className="max-w-md mx-auto flex items-center justify-around">
           <button
@@ -430,7 +442,7 @@ export function App() {
             }`}
           >
             <ShieldCheck className="w-5 h-5" />
-            <span className="text-[10px]">Conciliacion</span>
+            <span className="text-[10px]">Conciliación</span>
           </button>
         </div>
       </nav>
@@ -444,13 +456,13 @@ export function App() {
         initialType={modalType}
       />
 
-      {/* Modal de Monetizacion / Bloqueo por WhatsApp (Paywall) */}
+      {/* Modal de Monetización / Bloqueo por WhatsApp (Paywall) */}
       <PaywallModal
         isOpen={isPaywallOpen || (isTrialExpired && !isAdmin)}
         onClose={() => setIsPaywallOpen(false)}
         userEmail={user.email}
         userName={user.name}
-        daysRemaining={daysRemaining ?? 0}
+        daysRemaining={daysRemaining ?? 7}
         isExpired={isTrialExpired && !isAdmin}
       />
     </div>
