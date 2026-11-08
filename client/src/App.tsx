@@ -11,7 +11,9 @@ import {
   Moon,
   Sun,
   Shield,
-  Sparkles
+  Sparkles,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import api from './services/api';
 import { Category, DashboardData } from './types';
@@ -60,8 +62,9 @@ export function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [showTrialToast, setShowTrialToast] = useState(false);
 
-  // Calcular días restantes de prueba
+  // Calcular dias restantes de prueba
   const getDaysRemaining = () => {
     if (!user || !user.trialEndsAt || user.role === 'ADMIN' || user.subscriptionStatus === 'LIFETIME' || user.subscriptionStatus === 'ACTIVE') {
       return null;
@@ -72,6 +75,25 @@ export function App() {
 
   const daysRemaining = getDaysRemaining();
   const isTrialExpired = user?.subscriptionStatus === 'EXPIRED' || (daysRemaining !== null && daysRemaining <= 0);
+  const isAdmin = user?.role === 'ADMIN' || user?.email === 'victoria@balance.app';
+
+  // Mostrar Pop-up informativo de bienvenida / aviso de dias restantes
+  useEffect(() => {
+    if (user && !isAdmin && daysRemaining !== null && !isTrialExpired) {
+      const dismissedKey = `vb_trial_dismissed_${user.id}_day_${daysRemaining}`;
+      const alreadyDismissed = sessionStorage.getItem(dismissedKey);
+      if (!alreadyDismissed) {
+        setShowTrialToast(true);
+      }
+    }
+  }, [user?.id, daysRemaining, isAdmin, isTrialExpired]);
+
+  const dismissTrialToast = () => {
+    if (user && daysRemaining !== null) {
+      sessionStorage.setItem(`vb_trial_dismissed_${user.id}_day_${daysRemaining}`, 'true');
+    }
+    setShowTrialToast(false);
+  };
 
   const loadMainData = async () => {
     if (!user) return;
@@ -92,6 +114,10 @@ export function App() {
       }
     } catch (err: any) {
       console.error('Error al cargar datos:', err);
+      // Si el servidor responde que la suscripcion expiro
+      if (err.response?.status === 403 && err.response?.data?.subscriptionExpired) {
+        setUser((prev: any) => ({ ...prev, subscriptionStatus: 'EXPIRED' }));
+      }
     } finally {
       setLoading(false);
     }
@@ -110,12 +136,20 @@ export function App() {
   };
 
   const handleOpenTransaction = (type: 'INCOME' | 'EXPENSE') => {
-    if (isTrialExpired && user?.role !== 'ADMIN') {
+    if (isTrialExpired && !isAdmin) {
       setIsPaywallOpen(true);
       return;
     }
     setModalType(type);
     setIsModalOpen(true);
+  };
+
+  const handleTabChange = (tab: 'inicio' | 'movimientos' | 'presupuesto' | 'listas' | 'conciliacion' | 'admin') => {
+    if (isTrialExpired && !isAdmin) {
+      setIsPaywallOpen(true);
+      return;
+    }
+    setActiveTab(tab);
   };
 
   if (!user) {
@@ -133,18 +167,15 @@ export function App() {
     );
   }
 
-  // Comprobar si el usuario actual es Administrador
-  const isAdmin = user.role === 'ADMIN' || user.email === 'victoria@balance.app';
-
   return (
     <div className="min-h-screen pb-24 md:pb-12 flex flex-col font-sans transition-colors duration-200">
-      {/* Banner de Trial / Monetización (solo usuarios en Trial) */}
+      {/* Banner de Trial / Monetizacion */}
       {daysRemaining !== null && !isTrialExpired && (
         <div className="bg-gradient-to-r from-[#2E1065] via-[#5B21B6] to-[#065F46] text-white px-4 py-2 text-center text-xs font-semibold flex items-center justify-center gap-3">
-          <span>🎁 Tienes <strong>{daysRemaining} días de prueba gratuita</strong> restantes.</span>
+          <span>Tienes <strong>{daysRemaining} dia{daysRemaining === 1 ? '' : 's'} de prueba gratuita</strong> restantes.</span>
           <button
             onClick={() => setIsPaywallOpen(true)}
-            className="px-2.5 py-0.5 rounded-full bg-white text-[#2E1065] text-[10px] font-black uppercase hover:bg-purple-100 transition"
+            className="px-2.5 py-0.5 rounded-full bg-white text-[#2E1065] text-[10px] font-black uppercase hover:bg-purple-100 transition shadow-sm"
           >
             Activar Premium (WhatsApp)
           </button>
@@ -153,13 +184,57 @@ export function App() {
 
       {isTrialExpired && !isAdmin && (
         <div className="bg-rose-700 text-white px-4 py-2.5 text-center text-xs font-bold flex items-center justify-center gap-3">
-          <span>⚠️ Tu período de prueba de 7 días ha finalizado.</span>
+          <span>Tu periodo de prueba de 7 dias ha finalizado.</span>
           <button
             onClick={() => setIsPaywallOpen(true)}
             className="px-3 py-1 rounded-full bg-white text-rose-800 text-[11px] font-black uppercase hover:bg-rose-100 transition shadow"
           >
-            Activar Membresía por WhatsApp
+            Activar Membresia por WhatsApp
           </button>
+        </div>
+      )}
+
+      {/* POP-UP TOAST FLOTANTE INFORMATIVO DE PRUEBA */}
+      {showTrialToast && daysRemaining !== null && !isTrialExpired && (
+        <div className="fixed top-16 right-4 z-50 max-w-sm bg-white dark:bg-[#1E1530] border-2 border-[#C084FC] rounded-2xl p-4 shadow-2xl animate-in slide-in-from-top-4 duration-300">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-[#2E1065] dark:text-[#C084FC] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-[#2E1065] dark:text-white uppercase tracking-wider">
+                  Acceso de Prueba Activo
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-snug">
+                  Te quedan <strong className="text-purple-600 dark:text-purple-400">{daysRemaining} dia{daysRemaining === 1 ? '' : 's'}</strong> de uso completo sin costo.
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      dismissTrialToast();
+                      setIsPaywallOpen(true);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-[#065F46] hover:bg-[#044331] text-white text-[10px] font-black uppercase tracking-wider transition"
+                  >
+                    Ver Planes WhatsApp
+                  </button>
+                  <button
+                    onClick={dismissTrialToast}
+                    className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-slate-600 text-[10px] font-semibold transition"
+                  >
+                    Entendido
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={dismissTrialToast}
+              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2D1F47] text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -187,11 +262,11 @@ export function App() {
                   </span>
                 )}
               </h1>
-              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">Gestión Financiera Diaria & Personal</p>
+              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">Gestion Financiera Diaria & Personal</p>
             </div>
           </div>
 
-          {/* Selector de Período, Admin, Tema y Usuario */}
+          {/* Selector de Periodo, Admin, Tema y Usuario */}
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-2 bg-[#FAF8FC] dark:bg-[#1E1530] border border-[#E9D5FF] dark:border-[#382658] px-3 py-1.5 rounded-xl">
               <CalendarIcon className="w-4 h-4 text-[#2E1065] dark:text-[#C084FC]" />
@@ -203,7 +278,7 @@ export function App() {
               />
             </div>
 
-            {/* Botón Destacado de Panel Admin */}
+            {/* Boton Destacado de Panel Admin */}
             {isAdmin && (
               <button
                 onClick={() => setActiveTab(activeTab === 'admin' ? 'inicio' : 'admin')}
@@ -238,7 +313,7 @@ export function App() {
 
             <button
               onClick={handleLogout}
-              title="Cerrar sesión"
+              title="Cerrar sesion"
               className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
             >
               <LogOut className="w-4 h-4" />
@@ -247,7 +322,7 @@ export function App() {
         </div>
       </header>
 
-      {/* Contenido Dinámico */}
+      {/* Contenido Principal */}
       <main className="max-w-6xl mx-auto w-full px-4 sm:px-8 py-6 flex-1">
         {loading && !dashboardData ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-3">
@@ -298,11 +373,11 @@ export function App() {
         )}
       </main>
 
-      {/* Navegación Inferior */}
+      {/* Navegacion Inferior */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-[#181126]/95 backdrop-blur-md border-t border-[#E9D5FF]/60 dark:border-[#2D1F47] py-2.5 px-3 z-40 shadow-xl">
         <div className="max-w-md mx-auto flex items-center justify-around">
           <button
-            onClick={() => setActiveTab('inicio')}
+            onClick={() => handleTabChange('inicio')}
             className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition ${
               activeTab === 'inicio' ? 'text-[#2E1065] dark:text-[#C084FC] font-bold' : 'text-slate-400 hover:text-slate-700 font-medium'
             }`}
@@ -312,7 +387,7 @@ export function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('movimientos')}
+            onClick={() => handleTabChange('movimientos')}
             className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition ${
               activeTab === 'movimientos' ? 'text-[#2E1065] dark:text-[#C084FC] font-bold' : 'text-slate-400 hover:text-slate-700 font-medium'
             }`}
@@ -329,7 +404,7 @@ export function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('presupuesto')}
+            onClick={() => handleTabChange('presupuesto')}
             className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition ${
               activeTab === 'presupuesto' ? 'text-[#2E1065] dark:text-[#C084FC] font-bold' : 'text-slate-400 hover:text-slate-700 font-medium'
             }`}
@@ -339,7 +414,7 @@ export function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('listas')}
+            onClick={() => handleTabChange('listas')}
             className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition ${
               activeTab === 'listas' ? 'text-[#2E1065] dark:text-[#C084FC] font-bold' : 'text-slate-400 hover:text-slate-700 font-medium'
             }`}
@@ -349,18 +424,18 @@ export function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('conciliacion')}
+            onClick={() => handleTabChange('conciliacion')}
             className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition ${
               activeTab === 'conciliacion' ? 'text-[#2E1065] dark:text-[#C084FC] font-bold' : 'text-slate-400 hover:text-slate-700 font-medium'
             }`}
           >
             <ShieldCheck className="w-5 h-5" />
-            <span className="text-[10px]">Conciliación</span>
+            <span className="text-[10px]">Conciliacion</span>
           </button>
         </div>
       </nav>
 
-      {/* Modal de Registro */}
+      {/* Modal de Registro de Movimiento */}
       <TransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -369,13 +444,14 @@ export function App() {
         initialType={modalType}
       />
 
-      {/* Modal de Monetización / WhatsApp */}
+      {/* Modal de Monetizacion / Bloqueo por WhatsApp (Paywall) */}
       <PaywallModal
-        isOpen={isPaywallOpen}
+        isOpen={isPaywallOpen || (isTrialExpired && !isAdmin)}
         onClose={() => setIsPaywallOpen(false)}
         userEmail={user.email}
         userName={user.name}
         daysRemaining={daysRemaining ?? 0}
+        isExpired={isTrialExpired && !isAdmin}
       />
     </div>
   );

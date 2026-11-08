@@ -9,6 +9,7 @@ import shoppingRouter from './routes/shopping.js';
 import dashboardRouter from './routes/dashboard.js';
 import metaRouter from './routes/meta.js';
 import adminRouter from './routes/admin.js';
+import { authMiddleware, requireActiveSubscription } from './middleware/auth.js';
 
 dotenv.config();
 
@@ -18,14 +19,20 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Registro de rutas API
+// Registro de rutas públicas / autenticación
 app.use('/api/auth', authRouter);
-app.use('/api/transactions', transactionsRouter);
-app.use('/api/budgets', budgetsRouter);
-app.use('/api/lists', shoppingRouter);
+
+// Rutas protegidas que requieren suscripción o período de prueba activo
+app.use('/api/transactions', authMiddleware, requireActiveSubscription, transactionsRouter);
+app.use('/api/budgets', authMiddleware, requireActiveSubscription, budgetsRouter);
+app.use('/api/lists', authMiddleware, requireActiveSubscription, shoppingRouter);
+
+// Dashboard y metadatos (lectura y gestión básica)
 app.use('/api/dashboard', dashboardRouter);
-app.use('/api/admin', adminRouter);
 app.use('/api', metaRouter);
+
+// Panel exclusivo para administradores
+app.use('/api/admin', adminRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -38,5 +45,5 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✨ VICTORIA BALANCE API Server corriendo en http://localhost:${PORT}`);
+  console.log(`VICTORIA BALANCE API Server corriendo en el puerto ${PORT}`);
 });

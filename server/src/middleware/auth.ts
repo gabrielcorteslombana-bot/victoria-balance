@@ -28,6 +28,51 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
   }
 }
 
+export async function requireActiveSubscription(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    if (req.userRole === 'ADMIN' || req.userEmail === 'victoria@balance.app') {
+      return next();
+    }
+
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Usuario no identificado.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { role: true, email: true, subscriptionStatus: true, trialEndsAt: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado.' });
+    }
+
+    if (user.role === 'ADMIN' || user.email === 'victoria@balance.app' || user.subscriptionStatus === 'LIFETIME' || user.subscriptionStatus === 'ACTIVE') {
+      return next();
+    }
+
+    // Verificar si sigue dentro del período de prueba
+    if (user.subscriptionStatus === 'TRIAL' && user.trialEndsAt) {
+      if (new Date() <= new Date(user.trialEndsAt)) {
+        return next();
+      }
+      // Si ya expiró, actualizar a EXPIRED
+      await prisma.user.update({
+        where: { id: req.userId },
+        data: { subscriptionStatus: 'EXPIRED' }
+      });
+    }
+
+    return res.status(403).json({
+      error: 'Tu período de prueba ha finalizado. Activa tu membresía por WhatsApp (310 578 0607) para continuar.',
+      subscriptionExpired: true
+    });
+  } catch (error) {
+    console.error('Error en requireActiveSubscription:', error);
+    return res.status(500).json({ error: 'Error al verificar suscripción.' });
+  }
+}
+
 export async function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     if (req.userRole === 'ADMIN' || req.userEmail === 'victoria@balance.app') {
