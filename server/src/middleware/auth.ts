@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../prisma.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_victoria';
 
@@ -23,15 +24,33 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
     req.userRole = decoded.role || 'USER';
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Token inválido o expirado.' });
+    return res.status(401).json({ error: 'Token invalido o expirado.' });
   }
 }
 
-export function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  if (req.userRole !== 'ADMIN') {
+export async function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    if (req.userRole === 'ADMIN' || req.userEmail === 'victoria@balance.app') {
+      return next();
+    }
+
+    if (req.userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        select: { role: true, email: true }
+      });
+
+      if (user && (user.role === 'ADMIN' || user.email === 'victoria@balance.app')) {
+        req.userRole = 'ADMIN';
+        return next();
+      }
+    }
+
     return res.status(403).json({ error: 'Acceso denegado. Se requieren permisos de administrador.' });
+  } catch (error) {
+    console.error('Error en requireAdmin:', error);
+    return res.status(500).json({ error: 'Error al verificar permisos de administrador.' });
   }
-  next();
 }
 
 export function generateToken(userId: string, email: string, role: string = 'USER'): string {
