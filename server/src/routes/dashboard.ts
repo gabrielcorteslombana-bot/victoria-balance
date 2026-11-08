@@ -150,8 +150,43 @@ router.get('/', async (req: AuthenticatedRequest, res) => {
       description: t.description || null,
     }));
 
+    // 5.5 Comparativa con el mes anterior
+    const prevMonthDate = new Date(Date.UTC(year, month - 2, 1));
+    const prevYear = prevMonthDate.getUTCFullYear();
+    const prevMonth = prevMonthDate.getUTCMonth() + 1;
+    const prevStartDate = new Date(Date.UTC(prevYear, prevMonth - 1, 1, 0, 0, 0));
+    const prevEndDate = new Date(Date.UTC(prevYear, prevMonth, 0, 23, 59, 59, 999));
+
+    const prevExpensesTx = await prisma.transaction.findMany({
+      where: {
+        userId,
+        type: 'EXPENSE',
+        date: { gte: prevStartDate, lte: prevEndDate },
+      },
+      select: { amount: true },
+    });
+
+    let prevMonthExpenses = new Decimal(0);
+    for (const t of prevExpensesTx) {
+      prevMonthExpenses = prevMonthExpenses.plus(new Decimal(t.amount.toString()));
+    }
+
+    let expenseGrowthPercentage: number | null = null;
+    if (prevMonthExpenses.greaterThan(0)) {
+      expenseGrowthPercentage = monthlyExpenses
+        .minus(prevMonthExpenses)
+        .dividedBy(prevMonthExpenses)
+        .times(100)
+        .toDecimalPlaces(1)
+        .toNumber();
+    }
+
     return res.json({
       selected_period: periodRefString,
+      comparison: {
+        prev_month_expenses: prevMonthExpenses.toNumber(),
+        growth_percentage: expenseGrowthPercentage,
+      },
       period_status: period.status,
       monthly_income: monthlyIncome.toNumber(),
       monthly_expenses: monthlyExpenses.toNumber(),

@@ -104,7 +104,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <p className="text-[11px] text-slate-400 mt-1 font-medium">Entradas confirmadas en el mes</p>
         </div>
 
-        {/* Gastos del Mes (Violeta Profundo / Acento) */}
+        {/* Gastos del Mes con Comparativa Inteligente Mes a Mes */}
         <div className="bg-gradient-to-br from-white to-[#FAF8FC] p-5 rounded-3xl border border-[#2E1065]/15 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gastos del Mes</span>
@@ -115,7 +115,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="text-2xl font-black text-rose-600 tracking-tight">
             -{formatMoney(data.monthly_expenses)}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1 font-medium">Egresos registrados en el mes</p>
+          {data.comparison && data.comparison.growth_percentage !== null ? (
+            <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
+              {data.comparison.growth_percentage > 0 ? (
+                <span className="text-rose-600 flex items-center gap-0.5">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  +{data.comparison.growth_percentage}% vs mes anterior
+                </span>
+              ) : (
+                <span className="text-emerald-600 flex items-center gap-0.5">
+                  <TrendingUp className="w-3.5 h-3.5 rotate-180" />
+                  {data.comparison.growth_percentage}% vs mes anterior
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="text-[11px] text-slate-400 mt-1 font-medium">Egresos registrados en el mes</p>
+          )}
         </div>
 
         {/* Saldo Neto Mensual (Verde Bosque o Alerta) */}

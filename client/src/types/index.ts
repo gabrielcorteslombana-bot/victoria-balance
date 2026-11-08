@@ -59,6 +59,10 @@ export interface DashboardData {
   category_summary: CategorySummary[];
   shopping_summary: ShoppingSummary;
   alerts: string[];
+  comparison?: {
+    prev_month_expenses: number;
+    growth_percentage: number | null;
+  };
 }
 
 export interface ShoppingItem {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Filter, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { Plus, Trash2, Edit2, Filter, ArrowDownLeft, ArrowUpRight, Download, FileSpreadsheet } from 'lucide-react';
 import api from '../services/api';
 import { Transaction, Category } from '../types';
 
@@ -54,6 +54,32 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     }
   };
 
+  const exportToCSV = () => {
+    if (transactions.length === 0) {
+      alert('No hay movimientos para exportar.');
+      return;
+    }
+
+    const headers = ['Fecha', 'Tipo', 'Concepto', 'Categoria', 'Monto COP', 'Descripcion'];
+    const rows = transactions.map(t => [
+      t.date,
+      t.type === 'INCOME' ? 'Ingreso' : 'Gasto',
+      `"${(t.concept || '').replace(/"/g, '""')}"`,
+      `"${(t.category?.name || 'Sin clasificar').replace(/"/g, '""')}"`,
+      t.amount,
+      `"${(t.description || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,﻿' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `victoria_balance_movimientos_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -71,6 +97,14 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           <p className="text-xs text-slate-500">Registro persistente e inmediato de ingresos y gastos</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-[#E9D5FF] dark:border-[#382658] bg-white dark:bg-[#1E1530] text-[#2E1065] dark:text-[#E9D5FF] hover:bg-purple-50 dark:hover:bg-[#2D1F47] transition shadow-sm"
+            title="Exportar a Excel / CSV"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Exportar Excel</span>
+          </button>
           <button
             onClick={() => onOpenModal('INCOME')}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition"
