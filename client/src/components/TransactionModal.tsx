@@ -64,7 +64,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-[#E9D5FF] p-6 md:p-8 animate-in fade-in duration-200">
+      <div className="w-full max-w-lg bg-white dark:bg-[#181126] rounded-3xl shadow-2xl border border-[#E9D5FF] dark:border-[#2D1F47] p-6 md:p-8 animate-in fade-in duration-200">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
             <div className={`p-2.5 rounded-2xl ${type === 'INCOME' ? 'bg-[#065F46]/10 text-[#065F46]' : 'bg-[#E9D5FF]/50 text-[#2E1065]'}`}>
@@ -96,7 +96,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             type="button"
             onClick={() => setType('INCOME')}
             className={`py-2 text-xs font-bold rounded-xl transition ${
-              type === 'INCOME' ? 'bg-white shadow text-[#065F46]' : 'text-slate-500 hover:text-slate-800'
+              type === 'INCOME' ? 'bg-white dark:bg-[#2D1F47] shadow text-[#065F46] dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800'
             }`}
           >
             + Ingreso
@@ -164,7 +164,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-[#2E1065] bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#382658] text-xs font-semibold focus:outline-none focus:border-[#2E1065] dark:focus:border-[#C084FC] bg-white dark:bg-[#1E1530] text-slate-800 dark:text-white"
               >
                 <option value="">📌 Sin clasificar (Automático)</option>
                 {categories.map((c) => (

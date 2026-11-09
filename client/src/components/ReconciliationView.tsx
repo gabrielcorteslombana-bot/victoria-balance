@@ -114,9 +114,9 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="bg-white p-5 rounded-3xl border border-purple-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#181126] p-5 rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#2E1065]">Conciliación y Cierre de Período</h2>
+          <h2 className="text-xl font-bold text-[#2E1065] dark:text-[#E9D5FF]">Conciliación y Cierre de Período</h2>
           <p className="text-xs text-slate-500">
             Herramienta complementaria y opcional. No altera tus movimientos originales.
           </p>
@@ -139,7 +139,7 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Formulario de Saldo Inicial */}
-        <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-[#181126] p-6 rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm space-y-4">
           <h3 className="text-sm font-bold text-[#2E1065]">Saldo Inicial Registrado del Período</h3>
           <p className="text-xs text-slate-500">
             Utilizado para calcular con exactitud el Saldo Disponible acumulado. Si no existe se utiliza 0.
@@ -164,7 +164,7 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
         </div>
 
         {/* Herramienta de Conciliación */}
-        <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-[#181126] p-6 rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm space-y-4">
           <h3 className="text-sm font-bold text-[#2E1065]">Revisión Bancaria (Conciliación)</h3>
           <p className="text-xs text-slate-500">
             Ingresa el total de egresos reportado por tu extracto bancario para verificar inconsistencias.
@@ -198,7 +198,7 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
       </div>
 
       {/* Historial de Conciliaciones */}
-      <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-[#181126] p-6 rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm space-y-4">
         <h3 className="text-sm font-bold text-[#2E1065]">Historial de Revisiones Realizadas</h3>
         {reconciliations.length === 0 ? (
           <p className="text-xs text-slate-400 py-4 text-center">No hay conciliaciones registradas.</p>

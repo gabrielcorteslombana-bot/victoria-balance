@@ -88,9 +88,9 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-purple-100 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-[#181126] p-5 rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm">
         <div>
-          <h2 className="text-xl font-bold text-[#2E1065]">Planificación de Presupuesto</h2>
+          <h2 className="text-xl font-bold text-[#2E1065] dark:text-[#E9D5FF]">Planificación de Presupuesto</h2>
           <p className="text-xs text-slate-500">Asigna límites mensuales por categoría para contrastar contra tus gastos reales</p>
         </div>
         <button
@@ -112,11 +112,11 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
       {loading ? (
         <div className="p-12 text-center text-xs text-slate-400">Cargando presupuesto...</div>
       ) : (
-        <div className="bg-white rounded-3xl border border-purple-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#181126] rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm overflow-hidden">
           <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-[#FAF8FC]">
             <div>
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Presupuesto Asignado Total</span>
-              <div className="text-xl font-bold text-[#2E1065]">{formatMoney(data?.totalBudget || 0)}</div>
+              <div className="text-xl font-bold text-[#2E1065] dark:text-[#E9D5FF]">{formatMoney(data?.totalBudget || 0)}</div>
             </div>
             <div className="text-right">
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ejecución Global</span>
@@ -126,7 +126,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
 
           <div className="divide-y divide-slate-100">
             {data?.categories.map((cat: any) => (
-              <div key={cat.categoryId} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-purple-50/20 transition">
+              <div key={cat.categoryId} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-purple-50/20 dark:hover:bg-[#1E1530]/50 transition">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-[#F5EEFF] text-xl flex items-center justify-center">
                     {cat.emoji}

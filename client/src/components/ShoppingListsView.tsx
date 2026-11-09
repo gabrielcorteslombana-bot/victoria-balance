@@ -121,9 +121,9 @@ export const ShoppingListsView: React.FC<ShoppingListsViewProps> = ({ currentPer
   return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-purple-100 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-[#181126] p-5 rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm">
         <div>
-          <h2 className="text-xl font-bold text-[#2E1065]">Mis Listas de Compras</h2>
+          <h2 className="text-xl font-bold text-[#2E1065] dark:text-[#E9D5FF]">Mis Listas de Compras</h2>
           <p className="text-xs text-slate-500">
             Totalmente independientes del presupuesto y movimientos financieros.
           </p>
@@ -151,7 +151,7 @@ export const ShoppingListsView: React.FC<ShoppingListsViewProps> = ({ currentPer
       {loading ? (
         <div className="p-12 text-center text-xs text-slate-400">Cargando listas...</div>
       ) : lists.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-purple-100 text-center text-xs text-slate-400">
+        <div className="bg-white dark:bg-[#181126] p-12 rounded-3xl border border-purple-100 dark:border-[#2D1F47] text-center text-xs text-slate-400">
           No tienes listas de compras creadas. Crea una arriba para organizar tus pendientes.
         </div>
       ) : (
@@ -160,7 +160,7 @@ export const ShoppingListsView: React.FC<ShoppingListsViewProps> = ({ currentPer
             const isExpanded = expandedListId === list.id;
 
             return (
-              <div key={list.id} className="bg-white rounded-3xl border border-purple-100 shadow-sm overflow-hidden">
+              <div key={list.id} className="bg-white dark:bg-[#181126] rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm overflow-hidden">
                 {/* Cabecera de la lista */}
                 <div className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 bg-[#FAF8FC]">
                   <div
@@ -214,21 +214,21 @@ export const ShoppingListsView: React.FC<ShoppingListsViewProps> = ({ currentPer
                         placeholder="Producto (ej: Leche descremada)..."
                         value={newItemName}
                         onChange={(e) => setNewItemName(e.target.value)}
-                        className="sm:col-span-6 px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B21B6] bg-white"
+                        className="sm:col-span-6 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#382658] text-xs focus:outline-none focus:border-[#5B21B6] bg-white dark:bg-[#1E1530] text-slate-800 dark:text-white"
                       />
                       <input
                         type="number"
                         placeholder="Cant."
                         value={newItemQty}
                         onChange={(e) => setNewItemQty(e.target.value)}
-                        className="sm:col-span-2 px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B21B6] bg-white"
+                        className="sm:col-span-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#382658] text-xs focus:outline-none focus:border-[#5B21B6] bg-white dark:bg-[#1E1530] text-slate-800 dark:text-white"
                       />
                       <input
                         type="number"
                         placeholder="Precio est. (opc)"
                         value={newItemPrice}
                         onChange={(e) => setNewItemPrice(e.target.value)}
-                        className="sm:col-span-3 px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B21B6] bg-white"
+                        className="sm:col-span-3 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#382658] text-xs focus:outline-none focus:border-[#5B21B6] bg-white dark:bg-[#1E1530] text-slate-800 dark:text-white"
                       />
                       <button
                         type="button"

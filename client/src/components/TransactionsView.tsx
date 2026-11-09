@@ -91,9 +91,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Encabezado y Acciones */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-purple-100 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-[#181126] p-5 rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm">
         <div>
-          <h2 className="text-xl font-bold text-[#2E1065]">Movimientos Diarios</h2>
+          <h2 className="text-xl font-bold text-[#2E1065] dark:text-[#E9D5FF]">Movimientos Diarios</h2>
           <p className="text-xs text-slate-500">Registro persistente e inmediato de ingresos y gastos</p>
         </div>
         <div className="flex items-center gap-2">
@@ -123,7 +123,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       </div>
 
       {/* Barra de Filtros */}
-      <div className="bg-white p-4 rounded-2xl border border-purple-100 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="bg-white dark:bg-[#181126] p-4 rounded-2xl border border-purple-100 dark:border-[#2D1F47] shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
         <input
           type="text"
           placeholder="Buscar por concepto..."
@@ -135,7 +135,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B21B6] bg-white"
+          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#382658] text-xs focus:outline-none focus:border-[#5B21B6] bg-white dark:bg-[#1E1530] text-slate-800 dark:text-white"
         >
           <option value="">Todos los tipos</option>
           <option value="INCOME">Solo Ingresos</option>
@@ -145,7 +145,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B21B6] bg-white"
+          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#382658] text-xs focus:outline-none focus:border-[#5B21B6] bg-white dark:bg-[#1E1530] text-slate-800 dark:text-white"
         >
           <option value="">Todas las categorías</option>
           {categories.map((c) => (
@@ -157,7 +157,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       </div>
 
       {/* Lista de Movimientos */}
-      <div className="bg-white rounded-3xl border border-purple-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#181126] rounded-3xl border border-purple-100 dark:border-[#2D1F47] shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-400">Cargando registros...</div>
         ) : transactions.length === 0 ? (

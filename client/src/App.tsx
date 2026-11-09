@@ -65,16 +65,27 @@ export function App() {
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [showTrialToast, setShowTrialToast] = useState(false);
 
-  // Calcular dias restantes de prueba
+  // Calcular dias restantes de prueba con base en trialEndsAt o createdAt
   const getDaysRemaining = () => {
     if (!user) return null;
     if (user.role === 'ADMIN' || user.email === 'victoria@balance.app' || user.subscriptionStatus === 'LIFETIME' || user.subscriptionStatus === 'ACTIVE') {
       return null;
     }
+    
+    let targetDate: Date | null = null;
     if (user.trialEndsAt) {
-      const diffTime = new Date(user.trialEndsAt).getTime() - new Date().getTime();
-      return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      targetDate = new Date(user.trialEndsAt);
+    } else if (user.createdAt) {
+      targetDate = new Date(user.createdAt);
+      targetDate.setDate(targetDate.getDate() + 7);
     }
+
+    if (targetDate) {
+      const diffTime = targetDate.getTime() - new Date().getTime();
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(0, days);
+    }
+
     if (user.subscriptionStatus === 'TRIAL') {
       return 7;
     }

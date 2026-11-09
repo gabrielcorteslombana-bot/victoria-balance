@@ -35,14 +35,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Barra de Período y Estado */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-[#E9D5FF]/60 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-[#181126] p-5 rounded-3xl border border-[#E9D5FF]/60 dark:border-[#2D1F47] shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-[#E9D5FF]/40 flex items-center justify-center text-[#2E1065] shadow-inner">
+          <div className="w-11 h-11 rounded-2xl bg-[#E9D5FF]/40 dark:bg-[#2D1F47] flex items-center justify-center text-[#2E1065] dark:text-[#C084FC] shadow-inner">
             <Calendar className="w-5 h-5" />
           </div>
           <div>
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Período Activo</span>
-            <h2 className="text-xl font-extrabold text-[#2E1065] tracking-tight">{data.selected_period}</h2>
+            <h2 className="text-xl font-extrabold text-[#2E1065] dark:text-[#E9D5FF] tracking-tight">{data.selected_period}</h2>
           </div>
         </div>
 
@@ -73,7 +73,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Tarjetas Principales de Indicadores */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Saldo Disponible Acumulado (Dorado / Amarillo Cálido) */}
-        <div className="bg-gradient-to-br from-white to-[#FAF8FC] p-5 rounded-3xl border border-[#D97706]/20 shadow-sm relative overflow-hidden group hover:shadow-md transition">
+        <div className="bg-gradient-to-br from-white to-[#FAF8FC] dark:from-[#181126] dark:to-[#1E1530] p-5 rounded-3xl border border-[#D97706]/20 shadow-sm relative overflow-hidden group hover:shadow-md transition">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#EAB308]/15 rounded-full blur-2xl pointer-events-none" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Saldo Disponible</span>
@@ -81,7 +81,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Wallet className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-2xl font-black text-[#2E1065] tracking-tight">
+          <div className="text-2xl font-black text-[#2E1065] dark:text-white tracking-tight">
             {formatMoney(data.available_balance)}
           </div>
           <div className="flex items-center gap-1 text-[11px] text-[#D97706] font-semibold mt-1">
@@ -91,7 +91,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Ingresos del Mes (Verde Bosque / Esmeralda) */}
-        <div className="bg-gradient-to-br from-white to-[#FAF8FC] p-5 rounded-3xl border border-[#065F46]/20 shadow-sm hover:shadow-md transition">
+        <div className="bg-gradient-to-br from-white to-[#FAF8FC] dark:from-[#181126] dark:to-[#1E1530] p-5 rounded-3xl border border-[#065F46]/20 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Ingresos del Mes</span>
             <div className="w-9 h-9 rounded-2xl bg-[#065F46]/10 text-[#065F46] flex items-center justify-center">
@@ -105,7 +105,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Gastos del Mes con Comparativa Inteligente Mes a Mes */}
-        <div className="bg-gradient-to-br from-white to-[#FAF8FC] p-5 rounded-3xl border border-[#2E1065]/15 shadow-sm hover:shadow-md transition">
+        <div className="bg-gradient-to-br from-white to-[#FAF8FC] dark:from-[#181126] dark:to-[#1E1530] p-5 rounded-3xl border border-[#2E1065]/15 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gastos del Mes</span>
             <div className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
@@ -135,7 +135,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Saldo Neto Mensual (Verde Bosque o Alerta) */}
-        <div className="bg-gradient-to-br from-white to-[#FAF8FC] p-5 rounded-3xl border border-[#C084FC]/30 shadow-sm hover:shadow-md transition">
+        <div className="bg-gradient-to-br from-white to-[#FAF8FC] dark:from-[#181126] dark:to-[#1E1530] p-5 rounded-3xl border border-[#C084FC]/30 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Balance Neto Mes</span>
             <div className="w-9 h-9 rounded-2xl bg-[#E9D5FF]/60 text-[#2E1065] flex items-center justify-center">
@@ -153,7 +153,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <button
           onClick={() => onOpenTransactionModal('INCOME')}
-          className="flex items-center justify-center gap-2.5 p-4 rounded-2xl bg-white border-2 border-[#065F46] text-[#064E3B] font-bold text-sm hover:bg-[#065F46]/5 shadow-sm active:scale-[0.99] transition"
+          className="flex items-center justify-center gap-2.5 p-4 rounded-2xl bg-white dark:bg-[#181126] border-2 border-[#065F46] text-[#064E3B] dark:text-emerald-400 font-bold text-sm hover:bg-[#065F46]/5 dark:hover:bg-[#065F46]/20 shadow-sm active:scale-[0.99] transition"
         >
           <ArrowDownLeft className="w-5 h-5 text-[#065F46]" />
           <span>+ Añadir Ingreso Inmediato</span>
@@ -170,7 +170,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Distribución Presupuestal y Listas de Compras */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Presupuesto por Categoría */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-[#E9D5FF]/60 shadow-sm space-y-4">
+        <div className="lg:col-span-2 bg-white dark:bg-[#181126] p-6 rounded-3xl border border-[#E9D5FF]/60 dark:border-[#2D1F47] shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-extrabold text-[#2E1065]">Ejecución Presupuestal por Categoría</h3>
@@ -228,7 +228,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Resumen Independiente de Listas de Compras */}
-        <div className="bg-white p-6 rounded-3xl border border-[#E9D5FF]/60 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-[#181126] p-6 rounded-3xl border border-[#E9D5FF]/60 dark:border-[#2D1F47] shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-[#E9D5FF]/50 text-[#2E1065]">
               <CheckSquare className="w-5 h-5 text-[#2E1065]" />
@@ -278,7 +278,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Últimos Movimientos Registrados */}
-      <div className="bg-white p-6 rounded-3xl border border-[#E9D5FF]/60 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-[#181126] p-6 rounded-3xl border border-[#E9D5FF]/60 dark:border-[#2D1F47] shadow-sm space-y-4">
         <h3 className="text-base font-extrabold text-[#2E1065]">Últimos Movimientos Registrados</h3>
         {data.recent_transactions.length === 0 ? (
           <p className="text-xs text-slate-400 py-6 text-center">No hay movimientos registrados en este período aún.</p>

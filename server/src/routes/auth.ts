@@ -100,6 +100,18 @@ router.post('/login', async (req, res) => {
       }
     }
 
+    // Si el usuario no tiene trialEndsAt, calcularlo a partir de su fecha de creación + 7 días
+    let finalTrialEndsAt = user.trialEndsAt;
+    if (!finalTrialEndsAt && user.subscriptionStatus === 'TRIAL' && user.role !== 'ADMIN') {
+      const calcDate = new Date(user.createdAt);
+      calcDate.setDate(calcDate.getDate() + 7);
+      finalTrialEndsAt = calcDate;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { trialEndsAt: finalTrialEndsAt }
+      });
+    }
+
     const token = generateToken(user.id, user.email, user.role);
     return res.json({
       token,
@@ -109,7 +121,8 @@ router.post('/login', async (req, res) => {
         name: user.name,
         role: user.role,
         subscriptionStatus: currentStatus,
-        trialEndsAt: user.trialEndsAt,
+        trialEndsAt: finalTrialEndsAt,
+        createdAt: user.createdAt,
       },
     });
   } catch (error: any) {
@@ -229,7 +242,18 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res) => {
       }
     }
 
-    return res.json({ user: { ...user, subscriptionStatus: currentStatus } });
+    let finalTrialEndsAt = user.trialEndsAt;
+    if (!finalTrialEndsAt && currentStatus === 'TRIAL' && user.role !== 'ADMIN') {
+      const calcDate = new Date(user.createdAt);
+      calcDate.setDate(calcDate.getDate() + 7);
+      finalTrialEndsAt = calcDate;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { trialEndsAt: finalTrialEndsAt }
+      });
+    }
+
+    return res.json({ user: { ...user, subscriptionStatus: currentStatus, trialEndsAt: finalTrialEndsAt } });
   } catch (error) {
     return res.status(500).json({ error: 'Error al obtener usuario.' });
   }
