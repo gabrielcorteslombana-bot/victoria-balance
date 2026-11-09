@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --color-violet-deep: #2E1065;
   --color-violet-main: #5B21B6;
@@ -13,7 +15,6 @@
   --color-amber-alert: #F59E0B;
 }
 
-/* Modo Claro y Modo Oscuro basados en la clase .dark */
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -23,75 +24,23 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* En Modo Oscuro */
 html.dark body {
   background-color: #0F0A1A;
   color: #F3F4F6;
 }
 
-html.dark .bg-white {
-  background-color: #181126 !important;
-  color: #F3F4F6 !important;
+/* En Modo Claro (forzar reseteo limpio cuando no hay .dark) */
+html:not(.dark) body {
+  background-color: #FAF8FC !important;
+  color: #1F2937 !important;
 }
 
-html.dark .bg-\[\#FAF8FC\] {
-  background-color: #120B20 !important;
+html:not(.dark) .bg-white {
+  background-color: #FFFFFF !important;
+  color: #1F2937 !important;
 }
 
-html.dark .border-slate-100,
-html.dark .border-slate-200,
-html.dark .border-purple-100,
-html.dark .border-\[\#E9D5FF\]\/60,
-html.dark .border-\[\#E9D5FF\]\/40,
-html.dark .border-\[\#E9D5FF\] {
-  border-color: #2D1F47 !important;
-}
-
-html.dark .text-\[\#2E1065\] {
-  color: #E9D5FF !important;
-}
-
-html.dark .text-slate-800,
-html.dark .text-slate-700,
-html.dark .text-slate-900 {
-  color: #F3F4F6 !important;
-}
-
-html.dark .text-slate-600,
-html.dark .text-slate-500 {
-  color: #A3A3B2 !important;
-}
-
-html.dark .text-slate-400 {
-  color: #7A7A8C !important;
-}
-
-html.dark input,
-html.dark select,
-html.dark textarea {
-  background-color: #1E1530 !important;
-  border-color: #382658 !important;
-  color: #FFFFFF !important;
-}
-
-html.dark input::placeholder,
-html.dark textarea::placeholder {
-  color: #6B6280 !important;
-}
-
-html.dark header,
-html.dark nav {
-  background-color: rgba(24, 17, 38, 0.95) !important;
-  border-color: #2D1F47 !important;
-}
-
-html.dark .bg-gradient-to-br {
-  background-image: none !important;
-  background-color: #181126 !important;
-}
-
-html.dark .shadow-sm,
-html.dark .shadow-md,
-html.dark .shadow-xl,
-html.dark .shadow-2xl {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+html:not(.dark) .text-\[\#2E1065\] {
+  color: #2E1065 !important;
 }
