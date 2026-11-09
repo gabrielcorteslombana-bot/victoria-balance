@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, KeyRound, ArrowLeft, CheckCircle2, Lock } from 'lucide-react';
 import api from '../services/api';
 
 interface AuthModalProps {
   onSuccess: (user: any) => void;
+}
+
+declare global {
+  interface Window {
+    google?: any;
+  }
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
@@ -18,6 +24,59 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  const GOOGLE_CLIENT_ID = '645351582870-71gtbbc6qqs9j0kueh6rp3pjft7ppd62.apps.googleusercontent.com';
+
+  // Manejar respuesta de Google OAuth
+  const handleGoogleCredentialResponse = async (response: any) => {
+    if (!response.credential) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.post('/auth/google', { credential: response.credential });
+      localStorage.setItem('vb_token', data.token);
+      localStorage.setItem('vb_user', JSON.stringify(data.user));
+      onSuccess(data.user);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Error al iniciar sesión con Google.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Inicializar botón oficial de Google Identity Services
+  useEffect(() => {
+    const initGoogle = () => {
+      if (window.google?.accounts?.id && googleBtnRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredentialResponse,
+        });
+
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'outline',
+          size: 'large',
+          width: 320,
+          text: view === 'LOGIN' ? 'signin_with' : 'signup_with',
+          shape: 'pill',
+          locale: 'es',
+        });
+      }
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogle();
+    } else {
+      const timer = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          initGoogle();
+          clearInterval(timer);
+        }
+      }, 300);
+      return () => clearInterval(timer);
+    }
+  }, [view]);
 
   const handleLoginRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +142,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
 
   return (
     <div className="min-h-screen w-full bg-[#FAF8FC] dark:bg-[#0F0A1A] flex items-center justify-center p-4 sm:p-6 font-sans">
-      <div className="w-full max-w-[420px] bg-white dark:bg-[#181126] rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-[#2D1F47] p-8 sm:p-10">
+      <div className="w-full max-w-[420px] bg-white dark:bg-[#181126] rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-[#2D1F47] p-8 sm:p-10">
         
         {/* Cabecera con Logo Balanza Oficial */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-[#2E1065] dark:bg-[#C084FC] flex items-center justify-center shadow-md shadow-purple-950/20 mb-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#2E1065] dark:bg-[#C084FC] flex items-center justify-center shadow-md shadow-purple-950/20 mb-3">
             <svg className="w-6 h-6 text-[#E9D5FF] dark:text-[#2E1065]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3v17M6 20h12" />
               <path d="M5 7l7-2 7 2" />
@@ -95,11 +154,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
               <path d="M19 7l-3 7h6l-3-7z" stroke="#D97706" fill="#D97706" fillOpacity="0.2" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-[#2E1065] dark:text-[#E9D5FF] tracking-tight">Victoria Balance</h2>
+          <h2 className="text-xl font-extrabold text-[#2E1065] dark:text-[#E9D5FF] tracking-tight">Victoria Balance</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {view === 'LOGIN' && 'Accede a tu cuenta personal'}
             {view === 'REGISTER' && 'Prueba 7 días gratis sin tarjeta'}
-            {(view === 'FORGOT_REQUEST' || view === 'FORGOT_VERIFY') && 'Recuperación de Contraseña Gratuita'}
+            {(view === 'FORGOT_REQUEST' || view === 'FORGOT_VERIFY') && 'Recuperación de Contraseña'}
           </p>
         </div>
 
@@ -121,9 +180,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
           </div>
         )}
 
-        {/* 1. Vista de Login o Registro */}
+        {/* 1. Botón Oficial de Google en Login / Registro */}
         {(view === 'LOGIN' || view === 'REGISTER') && (
-          <form onSubmit={handleLoginRegister} className="space-y-3.5">
+          <div className="space-y-4 mb-4">
+            <div className="flex flex-col items-center justify-center">
+              <div ref={googleBtnRef} className="min-h-[44px] flex items-center justify-center" />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2D1F47]" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">o con tu correo</span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2D1F47]" />
+            </div>
+          </div>
+        )}
+
+        {/* 2. Formulario de Login o Registro Tradicional */}
+        {(view === 'LOGIN' || view === 'REGISTER') && (
+          <form onSubmit={handleLoginRegister} className="space-y-3">
             {view === 'REGISTER' && (
               <>
                 <div>
@@ -202,7 +276,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
           </form>
         )}
 
-        {/* 2. Solicitar Código de Recuperación */}
+        {/* 3. Solicitar Código de Recuperación */}
         {view === 'FORGOT_REQUEST' && (
           <form onSubmit={handleRequestCode} className="space-y-3.5">
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -242,7 +316,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
           </form>
         )}
 
-        {/* 3. Ingresar Código y Nueva Contraseña */}
+        {/* 4. Ingresar Código y Nueva Contraseña */}
         {view === 'FORGOT_VERIFY' && (
           <form onSubmit={handleResetPassword} className="space-y-3.5">
             {whatsappUrl && (
@@ -305,7 +379,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
         )}
 
         {(view === 'LOGIN' || view === 'REGISTER') && (
-          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#2D1F47] text-center">
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-[#2D1F47] text-center">
             <button
               type="button"
               onClick={() => {

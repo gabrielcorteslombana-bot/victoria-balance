@@ -130,6 +130,81 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Inicio de sesión / Registro con Google (OAuth 2.0)
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ error: 'Credencial de Google no recibida.' });
+    }
+
+    // Decodificar el JWT de Google
+    const parts = credential.split('.');
+    if (parts.length !== 3) {
+      return res.status(400).json({ error: 'Token de Google inválido.' });
+    }
+
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+    const { email, name, sub: googleId } = payload;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Google no proporcionó un correo electrónico.' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
+    if (!user) {
+      // Crear nuevo usuario con 7 días de prueba
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+
+      // Clave aleatoria segura (el usuario entrará por Google)
+      const passwordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
+
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          name: name || 'Usuario Google',
+          passwordHash,
+          role: 'USER',
+          subscriptionStatus: 'TRIAL',
+          trialEndsAt,
+        },
+      });
+    }
+
+    // Sincronizar estado de trial si expiró
+    let currentStatus = user.subscriptionStatus;
+    if (user.role !== 'ADMIN' && currentStatus === 'TRIAL' && user.trialEndsAt) {
+      if (new Date() > new Date(user.trialEndsAt)) {
+        currentStatus = 'EXPIRED';
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { subscriptionStatus: 'EXPIRED' },
+        });
+      }
+    }
+
+    const token = generateToken(user.id, user.email, user.role);
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        subscriptionStatus: currentStatus,
+        trialEndsAt: user.trialEndsAt,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error en /auth/google:', error);
+    return res.status(500).json({ error: 'Error al iniciar sesión con Google.' });
+  }
+});
+
 // 1. Solicitar código de recuperación de contraseña (Gratis por WhatsApp oficial)
 router.post('/forgot-password', async (req, res) => {
   try {
