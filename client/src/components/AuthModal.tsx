@@ -180,24 +180,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
           </div>
         )}
 
-        {/* 1. Botón Oficial de Google en Login / Registro */}
+        {/* 1. Formulario de Login o Registro Tradicional */}
         {(view === 'LOGIN' || view === 'REGISTER') && (
-          <div className="space-y-4 mb-4">
-            <div className="flex flex-col items-center justify-center">
-              <div ref={googleBtnRef} className="min-h-[44px] flex items-center justify-center" />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2D1F47]" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">o con tu correo</span>
-              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2D1F47]" />
-            </div>
-          </div>
-        )}
-
-        {/* 2. Formulario de Login o Registro Tradicional */}
-        {(view === 'LOGIN' || view === 'REGISTER') && (
-          <form onSubmit={handleLoginRegister} className="space-y-3">
+          <form onSubmit={handleLoginRegister} className="space-y-3.5">
             {view === 'REGISTER' && (
               <>
                 <div>
@@ -264,7 +249,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
               />
             </div>
 
-            <div className="pt-2">
+            <div className="pt-1">
               <button
                 type="submit"
                 disabled={loading}
@@ -274,6 +259,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
               </button>
             </div>
           </form>
+        )}
+
+        {/* 2. Botón Oficial de Google en la PARTE INFERIOR */}
+        {(view === 'LOGIN' || view === 'REGISTER') && (
+          <div className="mt-5 space-y-3.5">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2D1F47]" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">o continúa con</span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2D1F47]" />
+            </div>
+
+            <div className="flex flex-col items-center justify-center">
+              <div ref={googleBtnRef} className="min-h-[44px] flex items-center justify-center" />
+            </div>
+          </div>
         )}
 
         {/* 3. Solicitar Código de Recuperación */}
