@@ -87,3 +87,19 @@ export interface ShoppingList {
   completionPercentage: number;
   items: ShoppingItem[];
 }
+
+export interface Debt {
+  id: string;
+  name: string;
+  totalAmount: number;
+  totalInstallments: number;
+  paidInstallments: number;
+  installmentAmount: number;
+  remainingInstallments: number;
+  remainingAmount: number;
+  progressPercentage: number;
+  status: 'ACTIVE' | 'PAID';
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

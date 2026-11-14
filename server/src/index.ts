@@ -9,6 +9,7 @@ import shoppingRouter from './routes/shopping.js';
 import dashboardRouter from './routes/dashboard.js';
 import metaRouter from './routes/meta.js';
 import adminRouter from './routes/admin.js';
+import debtsRouter from './routes/debts.js';
 import { authMiddleware, requireActiveSubscription } from './middleware/auth.js';
 
 dotenv.config();
@@ -26,6 +27,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/transactions', authMiddleware, requireActiveSubscription, transactionsRouter);
 app.use('/api/budgets', authMiddleware, requireActiveSubscription, budgetsRouter);
 app.use('/api/lists', authMiddleware, requireActiveSubscription, shoppingRouter);
+app.use('/api/debts', authMiddleware, requireActiveSubscription, debtsRouter);
 
 // Dashboard y metadatos (lectura y gestión básica)
 app.use('/api/dashboard', dashboardRouter);

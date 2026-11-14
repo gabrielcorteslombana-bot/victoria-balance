@@ -14,7 +14,8 @@ import {
   Sparkles,
   AlertCircle,
   Clock,
-  X
+  X,
+  CreditCard
 } from 'lucide-react';
 import api from './services/api';
 import { Category, DashboardData } from './types';
@@ -26,6 +27,8 @@ import { BudgetView } from './components/BudgetView';
 import { ShoppingListsView } from './components/ShoppingListsView';
 import { ReconciliationView } from './components/ReconciliationView';
 import { AdminView } from './components/AdminView';
+import { DebtsView } from './components/DebtsView';
+import { Transaction } from './types';
 import { PaywallModal } from './components/PaywallModal';
 
 export function App() {
@@ -50,7 +53,7 @@ export function App() {
     }
   }, [darkMode]);
 
-  const [activeTab, setActiveTab] = useState<'inicio' | 'movimientos' | 'presupuesto' | 'listas' | 'conciliacion' | 'admin'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'movimientos' | 'presupuesto' | 'listas' | 'conciliacion' | 'deudas' | 'admin'>('inicio');
   
   const now = new Date();
   const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -62,6 +65,7 @@ export function App() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [showTrialToast, setShowTrialToast] = useState(false);
 
@@ -146,16 +150,17 @@ export function App() {
     setUser(null);
   };
 
-  const handleOpenTransaction = (type: 'INCOME' | 'EXPENSE') => {
+  const handleOpenTransaction = (type: 'INCOME' | 'EXPENSE', txToEdit?: Transaction) => {
     if (isTrialExpired && !isAdmin) {
       setIsPaywallOpen(true);
       return;
     }
+    setEditingTransaction(txToEdit || null);
     setModalType(type);
     setIsModalOpen(true);
   };
 
-  const handleTabChange = (tab: 'inicio' | 'movimientos' | 'presupuesto' | 'listas' | 'conciliacion' | 'admin') => {
+  const handleTabChange = (tab: 'inicio' | 'movimientos' | 'presupuesto' | 'listas' | 'conciliacion' | 'deudas' | 'admin') => {
     if (isTrialExpired && !isAdmin) {
       setIsPaywallOpen(true);
       return;
@@ -395,6 +400,10 @@ export function App() {
                 onRefreshData={loadMainData}
               />
             )}
+
+            {activeTab === 'deudas' && (
+              <DebtsView />
+            )}
           </>
         )}
       </main>
@@ -452,6 +461,16 @@ export function App() {
           </button>
 
           <button
+            onClick={() => handleTabChange('deudas')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl transition ${
+              activeTab === 'deudas' ? 'text-[#2E1065] dark:text-[#C084FC] font-black' : 'text-slate-400 hover:text-slate-700 font-medium'
+            }`}
+          >
+            <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-[9px] sm:text-[10px]">Deudas</span>
+          </button>
+
+          <button
             onClick={() => handleTabChange('conciliacion')}
             className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl transition ${
               activeTab === 'conciliacion' ? 'text-[#2E1065] dark:text-[#C084FC] font-black' : 'text-slate-400 hover:text-slate-700 font-medium'
@@ -477,13 +496,17 @@ export function App() {
         </div>
       </nav>
 
-      {/* Modal de Registro de Movimiento */}
+      {/* Modal de Registro y Edición de Movimiento */}
       <TransactionModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingTransaction(null);
+        }}
         categories={categories}
         onSuccess={loadMainData}
         initialType={modalType}
+        transactionToEdit={editingTransaction}
       />
 
       {/* Modal de Monetización / Bloqueo por WhatsApp (Paywall) */}

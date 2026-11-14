@@ -25,6 +25,7 @@ model User {
   budgets            BudgetAllocation[]
   shoppingLists      ShoppingList[]
   reconciliations    Reconciliation[]
+  debts              Debt[]
   auditLogs          AuditLog[]
 
   @@map("users")
@@ -160,4 +161,22 @@ model AuditLog {
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("audit_logs")
+}
+
+model Debt {
+  id               String       @id @default(uuid())
+  userId           String       @map("user_id")
+  name             String
+  totalAmount      Decimal      @db.Decimal(14, 2) @map("total_amount")
+  totalInstallments Int         @map("total_installments") // Cuotas totales (ej: 12)
+  paidInstallments Int          @default(0) @map("paid_installments") // Cuotas pagadas (ej: 3)
+  installmentAmount Decimal?    @db.Decimal(14, 2) @map("installment_amount") // Valor cuota mensual
+  status           String       @default("ACTIVE") // ACTIVE, PAID
+  notes            String?
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("debts")
 }
